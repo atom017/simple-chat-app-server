@@ -18,10 +18,11 @@ const io = socketio(server,{
 app.use(cors());
 app.use(router);
 
-io.on('connection',(socket)=>{
+io.sockets.on('connection',(socket)=>{
    
     socket.on('join',({name,room},callback) =>{
         const {error,user} = addUser({id:socket.id,name,room});
+        console.log('New user with id :',socket.id,' name: ', name)
         if(error){
             return callback(error);
         }
@@ -58,18 +59,14 @@ io.on('connection',(socket)=>{
     })
 
     socket.on('disconnect',() =>{
-        try {
-            const user = removeUser(socket.id);
-            if(user){
-                // console.log(user,getUsersInRoom(user.room));
-                io.to(user.room).emit('message', { user: 'admin', text: `${user.name} has left.` });
-                io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room)});
-            }
         
-        } catch (error) {
-            
+        const user = removeUser(socket.id);
+        if(user){
+          
+            io.to(user.room).emit('message', { user: 'admin', text: `${user.name} has left.` });
+            io.to(user.room).emit('roomData', { room: user.room, users: getUsersInRoom(user.room)});
         }
-               
+        
     })
     
     
